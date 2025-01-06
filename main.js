@@ -7,7 +7,7 @@ renderTasks(tasks);
 
 function addTask() {
   if (!taskElm.value) {
-    console.log("Nhập công việc");
+    console.log("Please add a task!");
     return;
   }
   var taskId = addBtn.getAttribute("id");
@@ -16,7 +16,7 @@ function addTask() {
     name: taskElm.value,
     taskIsDone: false,
   };
-  if ((taskId = 0 || taskId)) {
+  if (taskId !== null) {
     tasks[taskId] = task;
     addBtn.removeAttribute("id");
   } else {
@@ -43,26 +43,32 @@ function renderTasks(tasks) {
 }
 function doneTask(e) {
   var tasks = getTaskFromLocalStorage();
-  console.log(tasks);
+  var index = Array.from(todoList.children).indexOf(e.target.parentElement);
+  console.log(index);
 
-  if (e.target === this.children[0] || e.target === this) {
-    tasks.taskIsDone = !tasks.taskIsDone;
-    console.log(tasks.taskIsDone);
+  tasks[index].taskIsDone = !tasks[index].taskIsDone;
 
-    if (tasks.taskIsDone) {
-      this.children[0].classList.add("active");
-    } else {
-      this.children[0].classList.remove("active");
-    }
+  if (tasks[index].taskIsDone) {
+    e.target.classList.add("active");
+  } else {
+    e.target.classList.remove("active");
   }
+  localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
 function editTask(id) {
   let tasks = getTaskFromLocalStorage();
-  if (tasks.length > 0) {
+  if (tasks.length > 0 || tasks[id]) {
     taskElm.value = tasks[id].name;
     addBtn.setAttribute("id", id);
   }
+  renderTasks(getTaskFromLocalStorage());
+}
+function deleteTask(id) {
+  let tasks = getTaskFromLocalStorage();
+  tasks.splice(id, 1);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  renderTasks(getTaskFromLocalStorage());
 }
 function getTaskFromLocalStorage() {
   return localStorage.getItem("tasks")
@@ -72,7 +78,14 @@ function getTaskFromLocalStorage() {
 
 addBtn.addEventListener("click", addTask);
 
-var todoListChildren = Array.from(todoList.children);
-todoListChildren.forEach(function (chilElm) {
-  chilElm.addEventListener("click", doneTask);
+todoList.addEventListener("click", function (e) {
+  if (e.target.classList.contains("task")) {
+    doneTask(e);
+  } else if (e.target.classList.contains("edit-btn")) {
+    const index = e.target.dataset.index;
+    editTask(index);
+  } else if (e.target.classList.contains("delete-btn")) {
+    const index = e.target.dataset.index;
+    deleteTask(index);
+  }
 });
